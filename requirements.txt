@@ -1,0 +1,5 @@
+# Streamlit is installed by HF based on `sdk_version` in README.md
+
+# Do not pin it here — it can conflict with HF’s runtime.
+
+huggingface_hub>=0.24.0
