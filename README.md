@@ -34,19 +34,6 @@ thumbnail: >-
 
 ⸻
 
-<p align="center">
-  <strong>Streamlit-powered code generation and workflow orchestration surface for authorized purple-team operations.</strong>
-</p>
-
-<p align="center">
-  <img alt="Python" src="https://img.shields.io/badge/python-3.11%2B-blue">
-  <img alt="Streamlit" src="https://img.shields.io/badge/streamlit-1.57.0-red">
-  <img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-green">
-  <img alt="Security" src="https://img.shields.io/badge/focus-purple--team-purple">
-</p>
-
----
-
 ## Overview
 
 Purple Team Code Workbench is a Streamlit-based operational interface designed for structured, scope-aware security engineering workflows.
