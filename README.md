@@ -13,7 +13,6 @@ models:
 - HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive
 - DeepHat/DeepHat-V1-7B
 - llama3-8b-819
-
 ---
 
 # Uncensored HackerCoding GPT
