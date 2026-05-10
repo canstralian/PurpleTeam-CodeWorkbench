@@ -9,18 +9,12 @@ app_file: app.py
 pinned: false
 license: apache-2.0
 short_description: Streamlitj  code-gen surface for purple team work.
+models:
+- HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive
+- DeepHat/DeepHat-V1-7B
+- llama3-8b-819
+
 ---
----
-title: Uncensored HackerCoding GPT
-emoji: 📉
-colorFrom: pink
-colorTo: pink
-sdk: streamlit
-sdk_version: 1.57.0
-app_file: app.py
-pinned: false
-license: apache-2.0
-short_description: Streamlitj  code-gen surface for purple team work.
 
 # Uncensored HackerCoding GPT
 
