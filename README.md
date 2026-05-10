@@ -1,5 +1,5 @@
 ---
-title: Uncensored HackerCoding GPT
+title: Purple Team Code Workbench
 emoji: 📉
 colorFrom: purple
 colorTo: gray
