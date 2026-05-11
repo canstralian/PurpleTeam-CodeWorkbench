@@ -1,322 +1,641 @@
-# app.py
-# Authorized Security Assessment Workflow
-# Run: streamlit run app.py
+"""
+Purple Team Code Workbench
+Streamlit application scaffold inspired by the generated dashboard mockup.
+
+Run:
+    streamlit run app.py
+"""
 
 from __future__ import annotations
 
-import socket
-import ssl
-from datetime import datetime, timezone
-from urllib.parse import urlparse, urljoin
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Dict, List
 
-import httpx
+import pandas as pd
 import streamlit as st
-from bs4 import BeautifulSoup
-from pydantic import BaseModel, Field, HttpUrl
 
 
-class Scope(BaseModel):
-    target_url: HttpUrl
-    authorization_confirmed: bool
-    engagement_notes: str = ""
+# -----------------------------------------------------------------------------
+# Page configuration
+# -----------------------------------------------------------------------------
+
+st.set_page_config(
+    page_title="Purple Team Code Workbench",
+    page_icon="🛠️",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
 
-class Finding(BaseModel):
+# -----------------------------------------------------------------------------
+# Data models
+# -----------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class WorkflowStep:
+    number: int
+    label: str
+    status: str
+
+
+@dataclass(frozen=True)
+class EvidenceItem:
+    evidence_id: str
+    source: str
+    evidence_type: str
+    description: str
+    risk_indicator: str
+    collected_at: str
+
+
+@dataclass(frozen=True)
+class Finding:
+    finding_id: str
     title: str
+    description: str
     severity: str
-    evidence: str
-    recommendation: str
+    category: str
+    status: str
+    confidence: str
+    updated_at: str
 
 
-SECURITY_HEADERS = [
-    "strict-transport-security",
-    "content-security-policy",
-    "x-frame-options",
-    "x-content-type-options",
-    "referrer-policy",
-    "permissions-policy",
+# -----------------------------------------------------------------------------
+# Styling
+# -----------------------------------------------------------------------------
+
+CUSTOM_CSS = """
+<style>
+:root {
+    --bg: #070914;
+    --panel: #111827;
+    --panel-soft: #151b2e;
+    --border: #2a3147;
+    --purple: #7c3aed;
+    --purple-soft: #a855f7;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+}
+
+.stApp {
+    background: radial-gradient(circle at top, #14112a 0%, #070914 42%, #050711 100%);
+    color: var(--text);
+}
+
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #080b17 0%, #0d1020 100%);
+    border-right: 1px solid var(--border);
+}
+
+.block-container {
+    padding-top: 1.4rem;
+    padding-bottom: 2rem;
+}
+
+.hero-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+}
+
+.hero-subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.panel {
+    background: rgba(17, 24, 39, 0.88);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 1.1rem;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+}
+
+.metric-card {
+    background: rgba(21, 27, 46, 0.9);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.metric-card strong {
+    font-size: 1.55rem;
+    display: block;
+}
+
+.metric-card span {
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.workflow-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin: 1.2rem 0 1.6rem;
+}
+
+.workflow-step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+}
+
+.workflow-badge {
+    width: 42px;
+    height: 42px;
+    margin: 0 auto 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 800;
+    background: #0b1020;
+}
+
+.workflow-step.complete .workflow-badge {
+    border-color: var(--green);
+    color: var(--green);
+}
+
+.workflow-step.active .workflow-badge {
+    background: linear-gradient(135deg, var(--purple), var(--purple-soft));
+    border-color: var(--purple-soft);
+    color: white;
+    box-shadow: 0 0 26px rgba(168, 85, 247, 0.65);
+}
+
+.workflow-step.pending .workflow-badge {
+    color: var(--muted);
+}
+
+.workflow-label {
+    font-size: 0.78rem;
+    color: #dbeafe;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.16rem 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.low { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.35); }
+.medium { background: rgba(245,158,11,0.12); color: var(--yellow); border: 1px solid rgba(245,158,11,0.35); }
+.high { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.35); }
+.open { background: rgba(59,130,246,0.12); color: var(--blue); border: 1px solid rgba(59,130,246,0.35); }
+.authorized { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.35); }
+
+.scope-box {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 0.85rem;
+    background: rgba(17, 24, 39, 0.72);
+    margin-top: 1rem;
+}
+
+.scope-label {
+    color: var(--muted);
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.scope-value {
+    font-weight: 700;
+    margin-bottom: 0.45rem;
+}
+
+hr {
+    border-color: var(--border);
+}
+
+.stButton > button {
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: linear-gradient(135deg, #6d28d9, #9333ea);
+    color: white;
+    font-weight: 700;
+}
+
+.stButton > button:hover {
+    border-color: #c084fc;
+    color: white;
+}
+
+[data-testid="stDataFrame"] {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+}
+</style>
+"""
+
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
+
+# -----------------------------------------------------------------------------
+# Seed data
+# -----------------------------------------------------------------------------
+
+WORKFLOW_STEPS: List[WorkflowStep] = [
+    WorkflowStep(1, "Scope Definition", "complete"),
+    WorkflowStep(2, "Passive Recon", "complete"),
+    WorkflowStep(3, "Evidence Collection", "complete"),
+    WorkflowStep(4, "Finding Classification", "active"),
+    WorkflowStep(5, "Code / Prompt Generation", "pending"),
+    WorkflowStep(6, "Human Validation", "pending"),
+    WorkflowStep(7, "Report Export", "pending"),
+]
+
+EVIDENCE_ITEMS: List[EvidenceItem] = [
+    EvidenceItem("EV-1001", "nmap", "Open Port", "Port 22 SSH is open on 10.10.0.15", "Low", "2024-05-17 09:12"),
+    EvidenceItem("EV-1002", "nuclei", "CVE", "CVE-2023-28432 detected on web server", "Medium", "2024-05-17 09:18"),
+    EvidenceItem("EV-1003", "whatweb", "Tech Fingerprint", "Apache/2.4.49 identified", "Low", "2024-05-17 09:20"),
+    EvidenceItem("EV-1004", "gobuster", "Directory", "/admin panel discovered with HTTP 200", "Medium", "2024-05-17 09:22"),
+    EvidenceItem("EV-1005", "nmap", "Service Version", "OpenSSH 7.6p1 Ubuntu 4ubuntu0.3", "Low", "2024-05-17 09:23"),
+]
+
+FINDINGS: List[Finding] = [
+    Finding("F-1001", "Exposed SSH Service", "SSH service exposed to internal network", "Low", "Configuration", "Open", "High", "2024-05-17 09:25"),
+    Finding("F-1002", "Outdated Apache Version", "Apache 2.4.49 with known vulnerabilities", "Medium", "Vulnerability", "Open", "Medium", "2024-05-17 09:26"),
+    Finding("F-1003", "Directory Listing Enabled", "/admin directory is publicly accessible", "Medium", "Configuration", "Open", "Medium", "2024-05-17 09:27"),
+    Finding("F-1004", "Information Disclosure", "Server version disclosure in headers", "Low", "Information Disclosure", "Open", "High", "2024-05-17 09:28"),
+    Finding("F-1005", "Potential Default Credentials", "Default admin panel detected", "High", "Authentication", "Open", "Medium", "2024-05-17 09:29"),
+]
+
+MODEL_OPTIONS = [
+    "DeepHat-V1-7B",
+    "Gemma-4-E4B-Uncensored",
+    "Meta-Llama-3-8B-Instruct",
 ]
 
 
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+# -----------------------------------------------------------------------------
+# Helpers
+# -----------------------------------------------------------------------------
+
+def to_dataframe(items: List[object]) -> pd.DataFrame:
+    """Convert dataclass objects into a DataFrame."""
+    return pd.DataFrame([item.__dict__ for item in items])
 
 
-def fetch_url(url: str) -> dict:
-    try:
-        with httpx.Client(timeout=10, follow_redirects=True) as client:
-            response = client.get(url)
-        return {
-            "ok": True,
-            "status_code": response.status_code,
-            "final_url": str(response.url),
-            "headers": dict(response.headers),
-            "text": response.text[:200_000],
-        }
-    except Exception as exc:
-        return {"ok": False, "error": str(exc)}
+def severity_class(value: str) -> str:
+    """Return a CSS class for a severity value."""
+    return value.lower().strip()
 
 
-def check_security_headers(headers: dict) -> list[dict]:
-    normalized = {k.lower(): v for k, v in headers.items()}
-    results = []
-
-    for header in SECURITY_HEADERS:
-        present = header in normalized
-        results.append(
-            {
-                "control": header,
-                "status": "present" if present else "missing",
-                "value": normalized.get(header, ""),
-            }
-        )
-
-    return results
+def pill(label: str, css_class: str | None = None) -> str:
+    """Render a small HTML pill."""
+    css_class = css_class or label.lower().strip()
+    return f'<span class="status-pill {css_class}">{label}</span>'
 
 
-def get_tls_info(url: str) -> dict:
-    parsed = urlparse(url)
-    hostname = parsed.hostname
-
-    if not hostname:
-        return {"ok": False, "error": "Invalid hostname"}
-
-    try:
-        context = ssl.create_default_context()
-        with socket.create_connection((hostname, 443), timeout=8) as sock:
-            with context.wrap_socket(sock, server_hostname=hostname) as ssock:
-                cert = ssock.getpeercert()
-
-        return {
-            "ok": True,
-            "subject": cert.get("subject"),
-            "issuer": cert.get("issuer"),
-            "not_before": cert.get("notBefore"),
-            "not_after": cert.get("notAfter"),
-        }
-    except Exception as exc:
-        return {"ok": False, "error": str(exc)}
+def render_workflow_steps(steps: List[WorkflowStep]) -> None:
+    """Render the workflow progress tracker."""
+    html = '<div class="workflow-row">'
+    for step in steps:
+        html += f"""
+        <div class="workflow-step {step.status}">
+            <div class="workflow-badge">{step.number}</div>
+            <div class="workflow-label">{step.label}</div>
+        </div>
+        """
+    html += "</div>"
+    st.markdown(html, unsafe_allow_html=True)
 
 
-def extract_links(base_url: str, html: str) -> list[str]:
-    soup = BeautifulSoup(html, "html.parser")
-    links = set()
+def render_scope_box() -> None:
+    """Render active scope information in the sidebar."""
+    st.markdown(
+        """
+        <div class="scope-box">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="scope-label">Active Scope</div>
+                <span class="status-pill authorized">Authorized</span>
+            </div>
+            <hr />
+            <div class="scope-label">Engagement</div>
+            <div class="scope-value">Internal Infra Assessment</div>
+            <div class="scope-label">Scope ID</div>
+            <div class="scope-value">PT-2024-05-17</div>
+            <div class="scope-label">Target</div>
+            <div class="scope-value">10.10.0.0/16</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    for tag in soup.find_all("a", href=True):
-        href = tag["href"]
-        absolute = urljoin(base_url, href)
-        parsed = urlparse(absolute)
 
-        if parsed.scheme in {"http", "https"}:
-            links.add(absolute.split("#")[0])
+def render_report_preview(findings: List[Finding]) -> None:
+    """Render a compact report preview panel."""
+    high = sum(1 for finding in findings if finding.severity == "High")
+    medium = sum(1 for finding in findings if finding.severity == "Medium")
+    low = sum(1 for finding in findings if finding.severity == "Low")
 
-    return sorted(links)
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
+    st.subheader("Internal Infra Assessment Report")
+    st.caption("Scope ID: PT-2024-05-17")
+    st.caption(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown('<div class="metric-card"><strong>15</strong><span>Total Findings</span></div>', unsafe_allow_html=True)
+    with col2:
+        st.markdown(f'<div class="metric-card"><strong>{high}</strong><span>High</span></div>', unsafe_allow_html=True)
+    with col3:
+        st.markdown(f'<div class="metric-card"><strong>{medium}</strong><span>Medium</span></div>', unsafe_allow_html=True)
+    with col4:
+        st.markdown(f'<div class="metric-card"><strong>{low}</strong><span>Low</span></div>', unsafe_allow_html=True)
+
+    st.markdown("### Top Findings")
+    for finding in findings:
+        if finding.severity in {"High", "Medium"}:
+            st.markdown(
+                f"- `{finding.finding_id}` **{finding.title}** "
+                f"{pill(finding.severity, severity_class(finding.severity))}",
+                unsafe_allow_html=True,
+            )
+
+    st.download_button(
+        "Export Report (Markdown)",
+        data=generate_markdown_report(findings),
+        file_name="purple-team-report.md",
+        mime="text/markdown",
+        use_container_width=True,
+    )
+
+    if st.button("Copy Report to Clipboard", use_container_width=True):
+        st.toast("Report text prepared. Browser clipboard integration requires a custom component.")
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
-def build_markdown_report(scope: Scope, recon: dict, findings: list[Finding]) -> str:
+def generate_markdown_report(findings: List[Finding]) -> str:
+    """Generate a markdown report from the current findings."""
     lines = [
-        "# Authorized Security Assessment Report",
+        "# Internal Infra Assessment Report",
         "",
-        f"Generated: {utc_now()}",
+        "**Scope ID:** PT-2024-05-17",
+        f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}",
         "",
-        "## Scope",
+        "## Summary",
         "",
-        f"- Target: `{scope.target_url}`",
-        f"- Authorization confirmed: `{scope.authorization_confirmed}`",
-        f"- Notes: {scope.engagement_notes or 'None provided'}",
+        f"Total findings: {len(findings)}",
         "",
-        "## Passive Recon Summary",
-        "",
-        f"- HTTP status: `{recon.get('status_code', 'n/a')}`",
-        f"- Final URL: `{recon.get('final_url', 'n/a')}`",
-        "",
-        "## Security Header Review",
+        "## Findings",
         "",
     ]
 
-    for item in recon.get("security_headers", []):
-        lines.append(f"- `{item['control']}`: **{item['status']}**")
-
-    lines.extend(["", "## TLS Review", ""])
-
-    tls = recon.get("tls", {})
-    if tls.get("ok"):
-        lines.append(f"- Certificate valid from: `{tls.get('not_before')}`")
-        lines.append(f"- Certificate valid until: `{tls.get('not_after')}`")
-    else:
-        lines.append(f"- TLS check error: `{tls.get('error', 'unknown')}`")
-
-    lines.extend(["", "## Findings", ""])
-
-    if not findings:
-        lines.append("No findings recorded.")
-    else:
-        for idx, finding in enumerate(findings, start=1):
-            lines.extend(
-                [
-                    f"### {idx}. {finding.title}",
-                    "",
-                    f"Severity: **{finding.severity}**",
-                    "",
-                    "**Evidence**",
-                    "",
-                    finding.evidence,
-                    "",
-                    "**Recommendation**",
-                    "",
-                    finding.recommendation,
-                    "",
-                ]
-            )
+    for finding in findings:
+        lines.extend(
+            [
+                f"### {finding.finding_id}: {finding.title}",
+                "",
+                f"- Severity: {finding.severity}",
+                f"- Category: {finding.category}",
+                f"- Status: {finding.status}",
+                f"- Confidence: {finding.confidence}",
+                f"- Updated: {finding.updated_at}",
+                "",
+                finding.description,
+                "",
+            ]
+        )
 
     return "\n".join(lines)
 
 
-st.set_page_config(
-    page_title="Authorized Security Assessment Workflow",
-    page_icon="🛡️",
-    layout="wide",
-)
-
-st.title("Authorized Security Assessment Workflow")
-st.caption("Scope-gated passive recon, evidence logging, and report generation.")
-
-if "findings" not in st.session_state:
-    st.session_state.findings = []
+# -----------------------------------------------------------------------------
+# Sidebar
+# -----------------------------------------------------------------------------
 
 with st.sidebar:
-    st.header("Scope Gate")
+    st.markdown("## Purple Team\n## Code Workbench")
+    st.caption("Authorized security workflow surface")
+    st.divider()
 
-    target_url = st.text_input("Target URL", placeholder="https://example.com")
-    authorization_confirmed = st.checkbox(
-        "I confirm I am authorized to assess this target"
+    page = st.radio(
+        "Navigation",
+        [
+            "Dashboard",
+            "Scope & Targets",
+            "Workflows",
+            "Code Generation",
+            "Tools",
+            "Findings",
+            "Reports",
+            "Settings",
+        ],
+        index=2,
     )
-    engagement_notes = st.text_area(
-        "Engagement notes",
-        placeholder="Bug bounty program, internal asset, written permission, etc.",
+
+    render_scope_box()
+
+    st.divider()
+    st.caption("Operator")
+    st.write("analyst@corp.local")
+
+
+# -----------------------------------------------------------------------------
+# Main pages
+# -----------------------------------------------------------------------------
+
+selected_model = st.selectbox("Model", MODEL_OPTIONS, index=0)
+
+if page == "Dashboard":
+    st.markdown('<div class="hero-title">Dashboard</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-subtitle">Current engagement status, scope posture, and findings summary.</div>', unsafe_allow_html=True)
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown('<div class="metric-card"><strong>7</strong><span>Workflow Steps</span></div>', unsafe_allow_html=True)
+    with col2:
+        st.markdown('<div class="metric-card"><strong>5</strong><span>Evidence Items</span></div>', unsafe_allow_html=True)
+    with col3:
+        st.markdown('<div class="metric-card"><strong>5</strong><span>Open Findings</span></div>', unsafe_allow_html=True)
+    with col4:
+        st.markdown('<div class="metric-card"><strong>1</strong><span>High Severity</span></div>', unsafe_allow_html=True)
+
+    st.write("")
+    render_workflow_steps(WORKFLOW_STEPS)
+
+elif page == "Workflows":
+    st.markdown('<div class="hero-title">Workflow Orchestrator</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="hero-subtitle">Execute and track purple-team workflows with human-in-the-loop control.</div>',
+        unsafe_allow_html=True,
     )
 
-    run_recon = st.button("Run Passive Assessment")
+    render_workflow_steps(WORKFLOW_STEPS)
 
-if not target_url:
-    st.warning("Enter an authorized target URL to begin. Humanity survives another second.")
-    st.stop()
+    left, right = st.columns([2.4, 1])
 
-try:
-    scope = Scope(
-        target_url=target_url,
-        authorization_confirmed=authorization_confirmed,
-        engagement_notes=engagement_notes,
-    )
-except Exception as exc:
-    st.error(f"Invalid scope input: {exc}")
-    st.stop()
+    with left:
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
+        st.subheader("Step 4: Finding Classification")
+        st.caption("Review collected evidence and classify potential findings.")
 
-if not scope.authorization_confirmed:
-    st.error("Authorization is required before running any assessment.")
-    st.stop()
-
-tab_recon, tab_findings, tab_report = st.tabs(
-    ["Passive Recon", "Findings", "Report"]
-)
-
-recon_data = st.session_state.get("recon_data")
-
-if run_recon:
-    response = fetch_url(str(scope.target_url))
-
-    if not response["ok"]:
-        st.error(response["error"])
-        st.stop()
-
-    headers_review = check_security_headers(response["headers"])
-    tls_info = get_tls_info(str(scope.target_url))
-    links = extract_links(response["final_url"], response["text"])
-
-    recon_data = {
-        **response,
-        "security_headers": headers_review,
-        "tls": tls_info,
-        "links": links[:100],
-        "checked_at": utc_now(),
-    }
-
-    st.session_state.recon_data = recon_data
-
-with tab_recon:
-    if not recon_data:
-        st.info("Run the passive assessment from the sidebar.")
-    else:
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.subheader("HTTP")
-            st.write("Status:", recon_data["status_code"])
-            st.write("Final URL:", recon_data["final_url"])
-            st.write("Checked:", recon_data["checked_at"])
-
-        with col2:
-            st.subheader("TLS")
-            st.json(recon_data["tls"])
-
-        st.subheader("Security Headers")
-        st.dataframe(recon_data["security_headers"], use_container_width=True)
-
-        st.subheader("Discovered Links")
-        st.dataframe(recon_data["links"], use_container_width=True)
-
-with tab_findings:
-    st.subheader("Add Finding")
-
-    title = st.text_input("Finding title")
-    severity = st.selectbox(
-        "Severity",
-        ["Informational", "Low", "Medium", "High", "Critical"],
-    )
-    evidence = st.text_area("Evidence")
-    recommendation = st.text_area("Recommendation")
-
-    if st.button("Save Finding"):
-        if not title or not evidence or not recommendation:
-            st.error("Title, evidence, and recommendation are required.")
-        else:
-            st.session_state.findings.append(
-                Finding(
-                    title=title,
-                    severity=severity,
-                    evidence=evidence,
-                    recommendation=recommendation,
-                )
+        tabs = st.tabs(["Collected Evidence", "Classification", "Notes"])
+        with tabs[0]:
+            st.dataframe(
+                to_dataframe(EVIDENCE_ITEMS).rename(
+                    columns={
+                        "evidence_id": "ID",
+                        "source": "Source",
+                        "evidence_type": "Type",
+                        "description": "Description",
+                        "risk_indicator": "Risk Indicator",
+                        "collected_at": "Collected At",
+                    }
+                ),
+                use_container_width=True,
+                hide_index=True,
             )
-            st.success("Finding saved.")
+            st.caption("Showing 1 to 5 of 12 evidence items")
 
-    st.subheader("Current Findings")
+        with tabs[1]:
+            selected_evidence = st.selectbox(
+                "Evidence item",
+                [item.evidence_id for item in EVIDENCE_ITEMS],
+            )
+            severity = st.selectbox("Proposed severity", ["Low", "Medium", "High"])
+            category = st.selectbox(
+                "Category",
+                ["Configuration", "Vulnerability", "Authentication", "Information Disclosure"],
+            )
+            if st.button("Create Draft Finding"):
+                st.toast(f"Draft finding created from {selected_evidence} as {severity}/{category}.")
 
-    if not st.session_state.findings:
-        st.info("No findings recorded.")
-    else:
-        for idx, finding in enumerate(st.session_state.findings, start=1):
-            with st.expander(f"{idx}. {finding.title} [{finding.severity}]"):
-                st.write(finding.evidence)
-                st.write("Recommendation:")
-                st.write(finding.recommendation)
+        with tabs[2]:
+            st.text_area(
+                "Analyst notes",
+                value="Review evidence relationships before escalating to code/prompt generation.",
+                height=140,
+            )
 
-with tab_report:
-    if not recon_data:
-        st.info("Run recon before generating a report.")
-    else:
-        report = build_markdown_report(
-            scope=scope,
-            recon=recon_data,
-            findings=st.session_state.findings,
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with right:
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
+        st.subheader("Workflow Control")
+        st.caption("Internal Infra Assessment")
+        st.write(f"**Status:** {pill('In Progress', 'open')}", unsafe_allow_html=True)
+        st.write("**Current Step:** 4 of 7 - Finding Classification")
+        st.write("**Started At:** 2024-05-17 09:02")
+        st.write("**Last Updated:** 2024-05-17 09:24")
+        st.button("Continue to Next Step →", use_container_width=True)
+        st.button("← Back to Previous Step", use_container_width=True)
+        st.button("Pause Workflow", use_container_width=True)
+        st.info("Review each evidence item and classify it according to severity and impact.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+elif page == "Findings":
+    st.markdown('<div class="hero-title">Findings</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-subtitle">Manage, review, and export engagement findings.</div>', unsafe_allow_html=True)
+
+    left, right = st.columns([2.1, 1])
+
+    with left:
+        tab_all, tab_severity, tab_status, tab_category = st.tabs(
+            ["All Findings", "By Severity", "By Status", "By Category"]
         )
+        with tab_all:
+            search = st.text_input("Search findings", placeholder="Search findings...")
+            findings_df = to_dataframe(FINDINGS).rename(
+                columns={
+                    "finding_id": "ID",
+                    "title": "Title",
+                    "description": "Description",
+                    "severity": "Severity",
+                    "category": "Category",
+                    "status": "Status",
+                    "confidence": "Confidence",
+                    "updated_at": "Updated At",
+                }
+            )
+            if search:
+                findings_df = findings_df[
+                    findings_df.apply(
+                        lambda row: search.lower() in " ".join(str(v).lower() for v in row.values),
+                        axis=1,
+                    )
+                ]
+            st.dataframe(findings_df, use_container_width=True, hide_index=True)
+            st.caption("Showing 1 to 5 of 15 findings")
 
-        st.subheader("Markdown Report")
-        st.text_area("Report", report, height=500)
+        with tab_severity:
+            st.bar_chart(to_dataframe(FINDINGS)["severity"].value_counts())
 
-        st.download_button(
-            "Download Report",
-            data=report,
-            file_name="authorized_security_assessment_report.md",
-            mime="text/markdown",
+        with tab_status:
+            st.bar_chart(to_dataframe(FINDINGS)["status"].value_counts())
+
+        with tab_category:
+            st.bar_chart(to_dataframe(FINDINGS)["category"].value_counts())
+
+    with right:
+        render_report_preview(FINDINGS)
+
+elif page == "Reports":
+    st.markdown('<div class="hero-title">Reports</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-subtitle">Preview and export structured engagement reports.</div>', unsafe_allow_html=True)
+    render_report_preview(FINDINGS)
+
+elif page == "Code Generation":
+    st.markdown('<div class="hero-title">Code Generation</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-subtitle">Draft controlled code and prompt artifacts for authorized workflows.</div>', unsafe_allow_html=True)
+
+    with st.form("code_generation_form"):
+        objective = st.text_area(
+            "Authorized objective",
+            placeholder="Describe the defensive workflow, validation task, or report artifact you want to generate.",
+            height=120,
         )
+        guardrails = st.multiselect(
+            "Guardrails",
+            [
+                "No autonomous execution",
+                "No credential handling",
+                "Passive-only mode",
+                "Human validation required",
+                "Generate report artifact only",
+            ],
+            default=["Human validation required", "No autonomous execution"],
+        )
+        submitted = st.form_submit_button("Generate Draft")
+
+    if submitted:
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
+        st.subheader("Generated Draft")
+        st.code(
+            """# Draft placeholder\n# Replace this section with provider-backed generation.\n# Objective and guardrails should be sent as structured context.\n""",
+            language="python",
+        )
+        st.write("**Objective:**", objective or "No objective provided")
+        st.write("**Guardrails:**", ", ".join(guardrails))
+        st.markdown('</div>', unsafe_allow_html=True)
+
+else:
+    st.markdown(f'<div class="hero-title">{page}</div>', unsafe_allow_html=True)
+    st.info("This section is scaffolded for future implementation.")
+
+
+# -----------------------------------------------------------------------------
+# Footer
+# -----------------------------------------------------------------------------
+
+st.caption(
+    "Purple Team Code Workbench · Authorized workflows only · Generated outputs require human review."
+)
