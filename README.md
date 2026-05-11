@@ -1,47 +1,35 @@
 ---
 title: Purple Team Code Workbench
-
-emoji: 🛡️
-
+emoji: 👀
 colorFrom: purple
 colorTo: indigo
-
 sdk: streamlit
 sdk_version: 1.57.0
-
-python_version: "3.11"
-
+python_version: '3.11'
 app_file: app.py
-
 pinned: true
-
 license: apache-2.0
-
-short_description: >
+short_description: |
   AI workbench for purple-team security workflows.
-
 tags:
-  - cybersecurity
-  - purple-team
-  - defensive-security
-  - ai-security
-  - code-generation
-  - streamlit
-  - llm
-  - red-team
-  - blue-team
-  - security-research
-  - transformers
-  - generative-ai
-
+- cybersecurity
+- purple-team
+- defensive-security
+- ai-security
+- code-generation
+- streamlit
+- llm
+- red-team
+- blue-team
+- security-research
+- transformers
+- generative-ai
 models:
-  - DeepHat/DeepHat-V1-7B
-  - HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive
-  - meta-llama/Meta-Llama-3-8B-Instruct
-
+- DeepHat/DeepHat-V1-7B
+- HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive
+- meta-llama/Meta-Llama-3-8B-Instruct
 suggested_hardware: cpu-upgrade
 suggested_storage: small
-
 thumbnail: >-
   https://cdn-uploads.huggingface.co/production/uploads/67c714e90b99a2332e310979/L02-prFfHa7eBZGVf4uvR.jpeg
 ---
