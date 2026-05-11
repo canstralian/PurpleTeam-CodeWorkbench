@@ -1,35 +1,45 @@
 ---
 title: Purple Team Code Workbench
-emoji: 👀
+
+emoji: 🛡️
+
 colorFrom: purple
 colorTo: indigo
+
 sdk: streamlit
 sdk_version: 1.57.0
-python_version: '3.11'
+
+python_version: "3.11"
+
 app_file: app.py
+
 pinned: true
+
 license: apache-2.0
-short_description: |
-  AI workbench for purple-team security workflows.
+
+short_description: AI workbench for purple-team security workflows.
+
 tags:
-- cybersecurity
-- purple-team
-- defensive-security
-- ai-security
-- code-generation
-- streamlit
-- llm
-- red-team
-- blue-team
-- security-research
-- transformers
-- generative-ai
+  - cybersecurity
+  - purple-team
+  - defensive-security
+  - ai-security
+  - streamlit
+  - llm
+  - red-team
+  - blue-team
+  - security-research
+  - transformers
+  - generative-ai
+
 models:
-- DeepHat/DeepHat-V1-7B
-- HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive
-- meta-llama/Meta-Llama-3-8B-Instruct
+  - DeepHat/DeepHat-V1-7B
+  - HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive
+  - meta-llama/Meta-Llama-3-8B-Instruct
+
 suggested_hardware: cpu-upgrade
 suggested_storage: small
+
 thumbnail: >-
   https://cdn-uploads.huggingface.co/production/uploads/67c714e90b99a2332e310979/L02-prFfHa7eBZGVf4uvR.jpeg
 ---
@@ -69,6 +79,23 @@ The system is intentionally structured around controlled workflows rather than u
 
 ---
 
+## Why Purple Team?
+
+Purple-team methodology combines offensive security simulation with defensive validation and detection engineering.
+
+This workbench is designed to support collaborative workflows between:
+
+- security researchers
+- defenders
+- detection engineers
+- SOC analysts
+- incident responders
+- application security teams
+
+The focus is operational learning, validation, and resilience improvement rather than isolated offensive capability.
+
+---
+
 ## Safety & Intended Use
 
 Purple Team Code Workbench is intended for:
@@ -89,7 +116,7 @@ Users are responsible for complying with applicable laws, organizational policie
 
 | Model | Purpose |
 |---|---|
-| Gemma-4-E4B-Uncensored | Creative adversarial ideation and unrestricted experimentation |
+| Gemma-4-E4B-Uncensored | Experimental reasoning and adversarial simulation support |
 | DeepHat-V1-7B | Security-oriented coding and workflow assistance |
 | Llama 3 8B Instruct | General reasoning and structured instruction following |
 
@@ -164,15 +191,15 @@ A tragically rare design choice in 2026.
 
 ### Planned Capabilities
 
-- Agent orchestration
-- Prompt chaining
 - Workflow templates
+- Prompt chaining
+- Agent orchestration
 - Typed finding schemas
+- Multi-provider inference routing
+- Local LLM runtime support
 - Evidence graphing
 - Drift-aware execution state
-- Multi-provider inference routing
 - Report diff/version tracking
-- Local LLM runtime support
 - LangGraph integration
 - MCP-compatible tool surfaces
 
@@ -194,7 +221,18 @@ Model availability depends on provider access and deployment configuration.
 
 ## Repository Structure
 
-text . ├── app.py ├── requirements.txt ├── README.md ├── assets/ ├── workflows/ ├── prompts/ ├── reports/ ├── utils/ └── components/ 
+```text
+.
+├── app.py
+├── requirements.txt
+├── README.md
+├── assets/
+├── workflows/
+├── prompts/
+├── reports/
+├── utils/
+└── components/
+```
 
 Recommended modularization:
 
@@ -215,29 +253,42 @@ Recommended modularization:
 
 Clone the repository:
 
-bash git clone https://github.com/your-org/purple-team-code-workbench.git cd purple-team-code-workbench 
+```bash
+git clone https://github.com/your-org/purple-team-code-workbench.git
+cd purple-team-code-workbench
+```
 
 Create a virtual environment:
 
-bash python -m venv .venv 
+```bash
+python -m venv .venv 
+```
 
 Activate the environment:
 
 #### Linux/macOS
 
-bash source .venv/bin/activate 
+```bash
+source .venv/bin/activate 
+```
 
 #### Windows
 
-powershell .venv\Scripts\activate 
+```powershell
+.venv\Scripts\activate 
+```
 
 Install dependencies:
 
-bash pip install -r requirements.txt 
+```bash
+pip install -r requirements.txt 
+```
 
 Run the application:
 
-bash streamlit run app.py 
+```bash
+streamlit run app.py 
+```
 
 ---
 
@@ -252,33 +303,20 @@ This repository is compatible with:
 
 Example metadata:
 
-yaml sdk: streamlit sdk_version: 1.57.0 app_file: app.py license: apache-2.0 
-
+```yaml
+sdk: streamlit sdk_version: 1.57.0 app_file: app.py license: apache-2.0 
+```
 ---
 
-## Security Philosophy
+## Inference Providers
 
-This project is intended for:
+Model availability may vary depending on:
 
-- authorized testing
-- defensive research
-- purple-team simulation
-- workflow engineering
-- educational environments
-- internal security operations
-
-This repository is not intended for:
-
-- unauthorized access
-- destructive automation
-- malware deployment
-- credential theft
-- persistence tooling
-- uncontrolled exploitation
-
-Users are responsible for complying with all applicable laws and authorization requirements.
-
-Tiny administrative detail. Society gets strangely emotional about “cybercrime.”
+- Hugging Face Inference Providers
+- External API routing
+- Local runtime configuration
+- OAuth authentication state
+- Deployment hardware constraints
 
 ---
 
@@ -299,7 +337,9 @@ If deploying in production environments:
 
 ## Example Workflow
 
-text Scope Definition     ↓ Passive Recon     ↓ Evidence Collection     ↓ Finding Classification     ↓ Code/Prompt Generation     ↓ Human Validation     ↓ Report Export 
+```text
+Scope Definition     ↓ Passive Recon     ↓ Evidence Collection     ↓ Finding Classification     ↓ Code/Prompt Generation     ↓ Human Validation     ↓ Report Export 
+```
 
 ---
 
