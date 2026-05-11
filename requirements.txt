@@ -1,9 +1,2 @@
-# Streamlit is installed by HF based on `sdk_version` in README.md
-
-# Do not pin it here — it can conflict with HF’s runtime.
-
-huggingface_hub>=0.24.0
 streamlit==1.57.0
-httpx==0.28.1
-beautifulsoup4==4.12.3
-pydantic==2.11.3
+pandas>=2.2.0
