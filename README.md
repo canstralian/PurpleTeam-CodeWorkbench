@@ -75,7 +75,7 @@ The platform focuses on:
 - Report artifact generation
 - Research and analysis augmentation
 
-The system is intentionally structured around controlled workflows rather than unrestricted autonomous execution. Because the internet already contains enough entropy generators wearing hoodies and calling themselves “operators.”
+The system is intentionally structured around controlled workflows rather than unrestricted autonomous execution.
 
 ---
 
@@ -109,6 +109,18 @@ Purple Team Code Workbench is intended for:
 This project is not intended for unauthorized access, malware deployment, credential theft, persistence mechanisms, or destructive operations.
 
 Users are responsible for complying with applicable laws, organizational policies, and authorization requirements.
+
+---
+
+## Non-Goals
+
+This project is not intended to provide:
+
+- autonomous offensive operations
+- malware automation
+- persistence tooling
+- uncontrolled exploitation workflows
+- credential harvesting systems
 
 ---
 
@@ -213,7 +225,7 @@ Current configured models:
 |---|---|
 | HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive | Experimental coding and reasoning |
 | DeepHat/DeepHat-V1-7B | Security-oriented generation workflows |
-| llama3-8b-8192 | General-purpose assistant workflows |
+| Meta-Llama-3-8B-Instruct | General-purpose assistant workflows |
 
 Model availability depends on provider access and deployment configuration.
 
@@ -233,6 +245,8 @@ Model availability depends on provider access and deployment configuration.
 ├── utils/
 └── components/
 ```
+
+---
 
 Recommended modularization:
 
@@ -304,7 +318,10 @@ This repository is compatible with:
 Example metadata:
 
 ```yaml
-sdk: streamlit sdk_version: 1.57.0 app_file: app.py license: apache-2.0 
+sdk: streamlit
+sdk_version: 1.57.0
+app_file: app.py
+license: apache-2.0
 ```
 ---
 
@@ -338,7 +355,19 @@ If deploying in production environments:
 ## Example Workflow
 
 ```text
-Scope Definition     ↓ Passive Recon     ↓ Evidence Collection     ↓ Finding Classification     ↓ Code/Prompt Generation     ↓ Human Validation     ↓ Report Export 
+Scope Definition
+        ↓
+Passive Recon
+        ↓
+Evidence Collection
+        ↓
+Finding Classification
+        ↓
+Code / Prompt Generation
+        ↓
+Human Validation
+        ↓
+Report Export
 ```
 
 ---
