@@ -1,7 +1,7 @@
 ---
 title: Purple Team Code Workbench
 
-emoji: 🛡️
+emoji: 🛠️
 
 colorFrom: purple
 colorTo: indigo
