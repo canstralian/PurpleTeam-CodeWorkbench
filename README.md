@@ -1,18 +1,47 @@
 ---
 title: Purple Team Code Workbench
-emoji: 📉
+
+emoji: 🛡️
+
 colorFrom: purple
-colorTo: gray
+colorTo: indigo
+
 sdk: streamlit
 sdk_version: 1.57.0
+
+python_version: "3.11"
+
 app_file: app.py
+
 pinned: true
+
 license: apache-2.0
-short_description: Streamlit code-generation surface for purple-team workflows.
+
+short_description: >
+  AI workbench for purple-team security workflows.
+
+tags:
+  - cybersecurity
+  - purple-team
+  - defensive-security
+  - ai-security
+  - code-generation
+  - streamlit
+  - llm
+  - red-team
+  - blue-team
+  - security-research
+  - transformers
+  - generative-ai
+
 models:
-- HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive
-- DeepHat/DeepHat-V1-7B
-- llama3-8b-8192
+  - DeepHat/DeepHat-V1-7B
+  - HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive
+  - meta-llama/Meta-Llama-3-8B-Instruct
+
+suggested_hardware: cpu-upgrade
+suggested_storage: small
+
 thumbnail: >-
   https://cdn-uploads.huggingface.co/production/uploads/67c714e90b99a2332e310979/L02-prFfHa7eBZGVf4uvR.jpeg
 ---
@@ -36,7 +65,7 @@ thumbnail: >-
 
 ## Overview
 
-Purple Team Code Workbench is a Streamlit-based operational interface designed for structured, scope-aware security engineering workflows.
+Purple Team Code Workbench is an AI-assisted cybersecurity experimentation environment designed for defensive researchers, purple-team operators, and security engineers. The platform combines LLM-driven code generation, workflow prototyping, and adversarial simulation capabilities inside a lightweight Streamlit interface.
 
 The platform focuses on:
 
@@ -49,6 +78,42 @@ The platform focuses on:
 - Research and analysis augmentation
 
 The system is intentionally structured around controlled workflows rather than unrestricted autonomous execution. Because the internet already contains enough entropy generators wearing hoodies and calling themselves “operators.”
+
+---
+
+## Safety & Intended Use
+
+Purple Team Code Workbench is intended for:
+
+- Authorized security testing
+- Defensive security research
+- Secure software experimentation
+- Educational cybersecurity workflows
+- Purple-team simulation and analysis
+
+This project is not intended for unauthorized access, malware deployment, credential theft, persistence mechanisms, or destructive operations.
+
+Users are responsible for complying with applicable laws, organizational policies, and authorization requirements.
+
+---
+
+## Model Roles
+
+| Model | Purpose |
+|---|---|
+| Gemma-4-E4B-Uncensored | Creative adversarial ideation and unrestricted experimentation |
+| DeepHat-V1-7B | Security-oriented coding and workflow assistance |
+| Llama 3 8B Instruct | General reasoning and structured instruction following |
+
+---
+
+## Runtime Environment
+
+- Python 3.11
+- Streamlit 1.57.0
+- Transformers-based inference stack
+- CPU-compatible deployment
+- Optional GPU acceleration
 
 ---
 
@@ -306,7 +371,7 @@ This project is provided for authorized security research, defensive engineering
 
 The maintainers assume no liability for misuse, unauthorized deployment, or operational damage caused by derivative implementations.
 
-Because eventually someone always tries to turn a workflow engine into a cyberpunk side quest.
+Generated outputs may contain inaccuracies, insecure assumptions, or incomplete implementations. Human review is required before production or operational use.
 
 ---
 
