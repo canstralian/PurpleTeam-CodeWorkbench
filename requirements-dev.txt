@@ -1,0 +1,22 @@
+-r requirements.txt
+boolean.py==5.0
+cyclonedx-python-lib==11.7.0
+iniconfig==2.3.0
+librt==0.11.0
+license-expression==30.4.4
+markdown-it-py==4.2.0
+mdurl==0.1.2
+mypy==2.1.0
+mypy_extensions==1.1.0
+packageurl-python==0.17.6
+pathspec==1.1.1
+pip-api==0.0.34
+pip-requirements-parser==32.0.1
+pip_audit==2.10.0
+platformdirs==4.9.6
+pluggy==1.6.0
+py-serializable==2.1.0
+pytest==9.0.3
+ruff==0.15.13
+tomli==2.4.1
+tomli_w==1.2.0

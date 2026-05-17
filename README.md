@@ -322,6 +322,25 @@ Recommended modularization:
 
 ---
 
+## Detailed Usage
+
+### 1. Scope Gating
+Every session begins at the **Scope Gate**. You must define the engagement name, target system, and authorization owner. Confirming the scope unlocks the rest of the workbench. This step ensures all activities remain within authorized boundaries.
+
+### 2. Evidence Collection
+Use the **Evidence Ledger** to record observations, log snippets, and tool outputs. Each entry is hash-linked to the previous one, creating a traceable chain of evidence.
+
+### 3. Finding Management
+The **Findings** tab allows you to document security issues in a structured format. Link findings to evidence entries for full traceability.
+
+### 4. Workflow Prompt Generation
+In the **Workflow Builder**, you can generate safe, context-aware prompts for various security tasks (e.g., detection engineering, remediation planning). These prompts incorporate your authorized scope and trusted context to ensure the AI assistant stays on track.
+
+### 5. Report Export
+Finally, use the **Report Export** tab to generate a comprehensive Markdown report of your findings and evidence ledger. This report is ready for final review and delivery.
+
+---
+
 ## Installation
 
 ### Local Development
